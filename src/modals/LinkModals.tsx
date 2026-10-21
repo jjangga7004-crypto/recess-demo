@@ -17,6 +17,7 @@ interface Base {
 
 const LINK_TITLE_MAX = 60;
 const LINK_SUMMARY_MAX = 160;
+const LINK_EXCERPT_MAX = 400;
 const SOURCE_NAME_MAX = 20;
 
 function toDateInput(ts?: number): string {
@@ -32,6 +33,7 @@ export function LinkFormModal({ modalKey, isTop, editId }: Base & { editId?: str
   const [url, setUrl] = useState(editing?.url ?? '');
   const [title, setTitle] = useState(editing?.title ?? '');
   const [summary, setSummary] = useState(editing?.summary ?? '');
+  const [excerpt, setExcerpt] = useState(editing?.excerpt ?? '');
   const [source, setSource] = useState<SourceId>(editing?.source ?? 'etc');
   const [sourceTouched, setSourceTouched] = useState(!!editing);
   const [sourceName, setSourceName] = useState(editing?.sourceName ?? '');
@@ -40,8 +42,11 @@ export function LinkFormModal({ modalKey, isTop, editId }: Base & { editId?: str
   const [confirmed, setConfirmed] = useState(!!editing);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const ids = { url: useId(), title: useId(), summary: useId(), name: useId(), posted: useId(), check: useId() };
+  const excerptId = useId();
   const close = () => closeModal(modalKey);
   const today = toDateInput(Date.now());
+  // 본문 일부는 출처가 허용한 경우에만 받는다(직접 붙여넣기, 페이지에서 자동으로 가져오지 않음).
+  const excerptAllowed = SOURCES[source].excerpt === '허용';
 
   const onUrlChange = (value: string) => {
     setUrl(value);
@@ -79,6 +84,7 @@ export function LinkFormModal({ modalKey, isTop, editId }: Base & { editId?: str
       sourceName: source === 'etc' ? sourceName.trim() : undefined,
       topic,
       postedAt,
+      excerpt: excerptAllowed && excerpt.trim() ? excerpt.trim() : undefined,
     };
 
     if (editing) {
@@ -132,8 +138,8 @@ export function LinkFormModal({ modalKey, isTop, editId }: Base & { editId?: str
       >
         <p className="callout callout-plain">
           <span>
-            페이지 내용을 자동으로 가져오지 않아요. 입력한 주소와 직접 쓴 제목·소개로만 카드를 만들어요. 로그인·카페 가입이
-            필요한 글이나 개인정보가 보이는 글은 등록하지 마세요.
+            페이지 내용을 자동으로 가져오지 않아요. 입력한 주소와 직접 쓴 제목·소개(일부 출처는 붙여넣은 본문 일부)로만 카드를
+            만들어요. 로그인·카페 가입이 필요한 글이나 개인정보가 보이는 글은 등록하지 마세요.
           </span>
         </p>
 
@@ -234,12 +240,39 @@ export function LinkFormModal({ modalKey, isTop, editId }: Base & { editId?: str
             rows={3}
             value={summary}
             maxLength={LINK_SUMMARY_MAX}
-            placeholder="원문을 옮겨 적지 말고, 어떤 글인지 직접 소개해 주세요."
+            placeholder="어떤 글인지 직접 소개해 주세요."
             onChange={(e) => setSummary(e.target.value)}
             aria-invalid={!!errors.summary}
           />
           {err('summary')}
         </div>
+
+        {excerptAllowed && (
+          <div className="field">
+            <div className="field-top">
+              <label htmlFor={excerptId} className="field-label">
+                본문 일부 <span className="muted">(선택)</span>
+              </label>
+              <span className="counter">
+                {excerpt.length}/{LINK_EXCERPT_MAX}
+              </span>
+            </div>
+            <textarea
+              id={excerptId}
+              className="input textarea"
+              rows={4}
+              value={excerpt}
+              maxLength={LINK_EXCERPT_MAX}
+              placeholder="원문에서 보여줄 부분을 붙여넣어요."
+              onChange={(e) => setExcerpt(e.target.value)}
+              aria-describedby={`${excerptId}-help`}
+            />
+            <p id={`${excerptId}-help`} className="field-help">
+              원문에서 보여줄 부분을 직접 붙여넣어요. 부적절한 글이나 특정 사이트·회사를 비방하는 글은 넣지 마세요. 카드에는 앞부분
+              3줄만 보이고, 누르면 원문으로 가요.
+            </p>
+          </div>
+        )}
 
         <fieldset className="field">
           <legend className="field-label">주제</legend>

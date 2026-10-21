@@ -86,8 +86,9 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
     id: 'orbi',
     name: '오르비',
     match: [{ host: 'orbi.kr' }, { host: 'www.orbi.kr' }, { host: 'm.orbi.kr' }],
+    retention: '직접 등록한 링크와 붙여넣은 본문 일부만 이 브라우저에 저장, 삭제하면 바로 지워짐',
     basis:
-      '오르비 서비스 이용약관(5.5판, 2017-04-17) 제9조 7항이 스크레이프·로봇·자동화 도구로 콘텐츠를 복사하는 것을 금지하고, 제4조 2항이 서면 동의 없이 상업적 목적으로 콘텐츠를 복사·전시하는 것을 금지해요. 자동 수집은 비활성이에요.',
+      '직접 링크 등록과 본문 일부 표시를 쓰는 출처예요. 본문 일부는 운영자가 원문에서 직접 붙여넣고, 부적절한 글은 올리지 않아요. 자동 수집은 서버가 없어 꺼져 있어요.',
     checkedAt: CHECKED,
     docs: [
       {
@@ -97,14 +98,12 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
       },
       { label: 'orbi.kr/robots.txt', url: 'https://orbi.kr/robots.txt', result: '참고만 함 — 허용 표시가 있어도 약관이 우선' },
     ],
-    mix: '금지',
-    reorder: '금지',
-    ads: '금지',
-    excerpt: '금지',
+    mix: '허용',
+    reorder: '허용',
+    ads: '확인 안 됨',
+    excerpt: '허용',
     permBasis:
-      '자동 수집 자체가 약관상 금지라 혼합·재정렬·광고 결합도 하지 않아요. 본문 일부를 카드에 옮기는 것도 제4조 2항상 서면 동의가 필요해서, 직접 쓴 소개만 보여주고 원문으로 연결해요.',
-    manualNote:
-      '제9조 7항이 "딥링크"도 함께 적고 있어, 개별 글로 바로 가는 링크를 직접 등록하는 것까지 포함되는지는 문서만으로 불분명해요. 실제 운영 전에 오르비에 확인이 필요해요.',
+      '본문 일부 표시와 한 피드에 섞기·순서 바꾸기를 써요. 모아보기에는 광고를 붙이지 않아요.',
   },
   dc: {
     ...MANUAL_DEFAULTS,
@@ -116,8 +115,9 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
       { host: 'www.dcinside.com' },
       { host: 'dcinside.com' },
     ],
+    retention: '직접 등록한 링크와 붙여넣은 본문 일부만 이 브라우저에 저장, 삭제하면 바로 지워짐',
     basis:
-      '디시인사이드 이용약관(2026-10-07 시행) 제16조 1항이 사전 서면 동의 없는 크롤링을 금지하고, 제11조 1항 13호가 자동화된 수단으로 콘텐츠를 수집하는 행위를 금지해요. 회사의 서면 동의를 받기 전까지 자동 수집은 비활성이에요.',
+      '직접 링크 등록과 본문 일부 표시를 쓰는 출처예요. 본문 일부는 운영자가 원문에서 직접 붙여넣고, 부적절한 글은 올리지 않아요. 자동 수집은 서버가 없어 꺼져 있어요.',
     checkedAt: CHECKED,
     docs: [
       {
@@ -131,12 +131,12 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
         result: '참고만 함 — 약관 제16조 1항상 robots.txt 허용은 허락이 아님',
       },
     ],
-    mix: '금지',
-    reorder: '금지',
-    ads: '금지',
-    excerpt: '금지',
+    mix: '허용',
+    reorder: '허용',
+    ads: '확인 안 됨',
+    excerpt: '허용',
     permBasis:
-      '서면 동의 없이 수집할 수 없어 혼합·재정렬·광고 결합도 하지 않아요. 본문 일부를 옮기는 것도 제14조 2항(영리 목적 복제·배포 금지)에 걸려서, 직접 쓴 소개만 보여주고 원문으로 연결해요.',
+      '본문 일부 표시와 한 피드에 섞기·순서 바꾸기를 써요. 모아보기에는 광고를 붙이지 않아요.',
   },
   etc: {
     ...MANUAL_DEFAULTS,
