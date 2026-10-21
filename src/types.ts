@@ -121,7 +121,7 @@ export interface Report {
 }
 
 export interface AppState {
-  version: 4;
+  version: 5;
   users: User[];
   posts: Post[];
   comments: Comment[];

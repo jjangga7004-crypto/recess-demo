@@ -239,7 +239,7 @@ export function reducer(state: AppState, action: Action): AppState {
 // ---------- 저장 ----------
 
 type StoredState = Omit<AppState, 'version' | 'links' | 'linkPrefs'> & {
-  version: 1 | 2 | 3 | 4;
+  version: 1 | 2 | 3 | 4 | 5;
   links?: LinkItem[];
   linkPrefs?: LinkPrefs;
 };
@@ -248,7 +248,9 @@ function isValidState(x: unknown): x is StoredState {
   if (!x || typeof x !== 'object') return false;
   const s = x as Partial<StoredState>;
   return (
-    (s.version === 1 || s.version === 2 || s.version === 3 || s.version === 4) &&
+    typeof s.version === 'number' &&
+    s.version >= 1 &&
+    s.version <= 5 &&
     Array.isArray(s.users) &&
     Array.isArray(s.posts) &&
     Array.isArray(s.comments) &&
@@ -295,14 +297,17 @@ export function loadState(): AppState {
             ...fresh.comments.filter((c) => newPosts.some((p) => p.id === c.postId)),
           ];
         }
+        const linkPrefs = { ...DEFAULT_LINK_PREFS, ...(parsed.linkPrefs ?? {}) };
+        // 5판: 예시 카드를 한 번 숨긴다. 그 뒤로는 설정에서 켠 값을 그대로 둔다.
+        if (parsed.version < 5) linkPrefs.showExamples = false;
         return {
           ...parsed,
-          version: 4,
+          version: 5,
           theme: parsed.theme ?? 'light',
           posts,
           comments,
           links,
-          linkPrefs: { ...DEFAULT_LINK_PREFS, ...(parsed.linkPrefs ?? {}) },
+          linkPrefs,
         };
       }
     }

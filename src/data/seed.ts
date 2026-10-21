@@ -300,7 +300,7 @@ export function createSeedState(now: number = Date.now()): AppState {
   }
 
   return {
-    version: 4,
+    version: 5,
     users: SEED_USERS.map((x) => ({ ...x, ownedBadges: [...x.ownedBadges], shownBadges: [...x.shownBadges] })),
     posts,
     comments,
@@ -313,7 +313,8 @@ export function createSeedState(now: number = Date.now()): AppState {
   };
 }
 
-export const DEFAULT_LINK_PREFS: LinkPrefs = { saved: [], hidden: [], excludedSources: [], showExamples: true, searches: [] };
+// 예시 카드는 기본으로 숨긴다(5판, 사용자 요청). 설정에서 다시 켤 수 있다.
+export const DEFAULT_LINK_PREFS: LinkPrefs = { saved: [], hidden: [], excludedSources: [], showExamples: false, searches: [] };
 
 /** 4판에서 새로 넣은 RECESS 예시 글. 이전 판 데이터에 한 번만 더한다. */
 export const V4_POST_IDS = ['p-o1', 'p-o2'];
