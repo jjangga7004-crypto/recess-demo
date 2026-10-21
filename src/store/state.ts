@@ -1,6 +1,8 @@
 import { STORAGE_KEY, STORAGE_PREFIX } from '../config';
 import { DEMO_OWNED_BADGES } from '../data/catalog';
+import { createCuratedLinks } from '../data/curatedLinks';
 import { createSeedLinks } from '../data/linkSeed';
+import { normalizeUrl } from '../lib/links';
 import { createSeedState, DEFAULT_LINK_PREFS } from '../data/seed';
 import type { AppState, BadgeId, CategoryId, LinkItem, LinkPrefs, LinkRef, Post, ProfileState, SourceId, ThemeChoice } from '../types';
 
@@ -231,7 +233,7 @@ export function reducer(state: AppState, action: Action): AppState {
 // ---------- 저장 ----------
 
 type StoredState = Omit<AppState, 'version' | 'links' | 'linkPrefs'> & {
-  version: 1 | 2;
+  version: 1 | 2 | 3;
   links?: LinkItem[];
   linkPrefs?: LinkPrefs;
 };
@@ -240,7 +242,7 @@ function isValidState(x: unknown): x is StoredState {
   if (!x || typeof x !== 'object') return false;
   const s = x as Partial<StoredState>;
   return (
-    (s.version === 1 || s.version === 2) &&
+    (s.version === 1 || s.version === 2 || s.version === 3) &&
     Array.isArray(s.users) &&
     Array.isArray(s.posts) &&
     Array.isArray(s.comments) &&
@@ -256,12 +258,22 @@ export function loadState(): AppState {
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
       if (isValidState(parsed)) {
+        const now = Date.now();
         // 1판(모아보기 이전)에서 만든 글·프로필은 그대로 두고 모아보기 데이터만 더한다.
+        let links = Array.isArray(parsed.links) ? parsed.links : createSeedLinks(now);
+        // 3판 이전 데이터에는 실제 링크 12개를 한 번만 더한다(같은 주소를 이미 등록했으면 건너뛴다).
+        // 3판부터는 사용자가 지운 링크를 다시 살리지 않는다.
+        if (parsed.version < 3) {
+          const missing = createCuratedLinks(now).filter(
+            (c) => !links.some((l) => l.id === c.id || (l.url && c.url && normalizeUrl(l.url) === normalizeUrl(c.url))),
+          );
+          links = [...missing, ...links];
+        }
         return {
           ...parsed,
-          version: 2,
+          version: 3,
           theme: parsed.theme ?? 'light',
-          links: Array.isArray(parsed.links) ? parsed.links : createSeedLinks(Date.now()),
+          links,
           linkPrefs: { ...DEFAULT_LINK_PREFS, ...(parsed.linkPrefs ?? {}) },
         };
       }

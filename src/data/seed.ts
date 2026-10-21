@@ -1,4 +1,5 @@
 import type { AppState, BadgeId, CategoryId, Comment, LinkPrefs, Post, User } from '../types';
+import { createCuratedLinks } from './curatedLinks';
 import { createSeedLinks } from './linkSeed';
 
 // 예시 학생 계정. 학교·닉네임 모두 가상이며 실존 인물과 관계없다.
@@ -280,7 +281,7 @@ export function createSeedState(now: number = Date.now()): AppState {
   }
 
   return {
-    version: 2,
+    version: 3,
     users: SEED_USERS.map((x) => ({ ...x, ownedBadges: [...x.ownedBadges], shownBadges: [...x.shownBadges] })),
     posts,
     comments,
@@ -288,7 +289,7 @@ export function createSeedState(now: number = Date.now()): AppState {
     profiles: {},
     reports: [],
     theme: 'light',
-    links: createSeedLinks(now),
+    links: [...createCuratedLinks(now), ...createSeedLinks(now)],
     linkPrefs: { ...DEFAULT_LINK_PREFS },
   };
 }
