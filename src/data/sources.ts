@@ -26,7 +26,9 @@ export interface SourceConfig {
   mix: Permission;
   reorder: Permission;
   ads: Permission;
-  /** 혼합·재정렬·광고 판단의 근거 */
+  /** 원문 본문 일부를 카드에 옮겨 보여줘도 되는지 */
+  excerpt: Permission;
+  /** 혼합·재정렬·광고·본문 일부 판단의 근거 */
   permBasis: string;
   /** 직접 링크 등록에 대해 따로 확인할 점 */
   manualNote?: string;
@@ -75,8 +77,9 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
     mix: '금지',
     reorder: '금지',
     ads: '금지',
+    excerpt: '확인 안 됨',
     permBasis:
-      '네이버 검색 API로 연결한다고 가정할 때의 판단이에요(API HUB 특약 2.2·2.3). 카페 글이 그 API 대상인지는 확인하지 못했어요.',
+      '네이버 검색 API로 연결한다고 가정할 때의 판단이에요(API HUB 특약 2.2·2.3). 카페 글이 그 API 대상인지는 확인하지 못했어요. 본문 일부 표시는 네이버 약관을 확인하기 전까지 하지 않아요.',
   },
   orbi: {
     ...MANUAL_DEFAULTS,
@@ -97,7 +100,9 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
     mix: '금지',
     reorder: '금지',
     ads: '금지',
-    permBasis: '자동 수집 자체가 약관상 금지라 혼합·재정렬·광고 결합도 하지 않아요.',
+    excerpt: '금지',
+    permBasis:
+      '자동 수집 자체가 약관상 금지라 혼합·재정렬·광고 결합도 하지 않아요. 본문 일부를 카드에 옮기는 것도 제4조 2항상 서면 동의가 필요해서, 직접 쓴 소개만 보여주고 원문으로 연결해요.',
     manualNote:
       '제9조 7항이 "딥링크"도 함께 적고 있어, 개별 글로 바로 가는 링크를 직접 등록하는 것까지 포함되는지는 문서만으로 불분명해요. 실제 운영 전에 오르비에 확인이 필요해요.',
   },
@@ -129,7 +134,9 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
     mix: '금지',
     reorder: '금지',
     ads: '금지',
-    permBasis: '서면 동의 없이 수집할 수 없어 혼합·재정렬·광고 결합도 하지 않아요.',
+    excerpt: '금지',
+    permBasis:
+      '서면 동의 없이 수집할 수 없어 혼합·재정렬·광고 결합도 하지 않아요. 본문 일부를 옮기는 것도 제14조 2항(영리 목적 복제·배포 금지)에 걸려서, 직접 쓴 소개만 보여주고 원문으로 연결해요.',
   },
   etc: {
     ...MANUAL_DEFAULTS,
@@ -142,7 +149,8 @@ export const SOURCES: Record<SourceId, SourceConfig> = {
     mix: '확인 안 됨',
     reorder: '확인 안 됨',
     ads: '확인 안 됨',
-    permBasis: '자동 수집이 없어 해당 없음. 직접 쓴 소개 카드만 RECESS 순서로 보여줘요.',
+    excerpt: '확인 안 됨',
+    permBasis: '자동 수집이 없어 해당 없음. 직접 쓴 소개 카드만 RECESS 순서로 보여주고, 본문 일부는 출처마다 허락을 확인한 뒤에만 보여줘요.',
   },
 };
 

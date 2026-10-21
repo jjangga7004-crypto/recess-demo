@@ -20,6 +20,7 @@ function SourceStatusCard({ id }: { id: SourceId }) {
     ['한 피드에 섞기', s.mix],
     ['순서 바꾸기', s.reorder],
     ['광고 함께 표시', s.ads],
+    ['본문 일부 표시', s.excerpt],
     ['마지막 성공', s.lastSuccessAt ? fullDate(s.lastSuccessAt) : '없음'],
     ['오류', s.error ?? '없음'],
   ];

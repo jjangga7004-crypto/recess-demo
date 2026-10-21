@@ -1,21 +1,39 @@
 import { useId } from 'react';
 import { IconLink, IconSearch, IconX } from '../components/icons';
 import { LinkCard } from '../components/LinkCard';
+import { PostCard } from '../components/PostCard';
+import { TrendingStrip } from '../components/Trending';
 import { CATEGORIES } from '../data/catalog';
 import { AUTO_CONNECTED_COUNT, SOURCE_ORDER, SOURCES } from '../data/sources';
+import { isPostVisible, matchesQuery } from '../lib/feed';
+import { KEYWORD_BY_ID, matchesKeyword } from '../lib/keywords';
 import { filterLinks, partitionForDisplay, visibleLinks } from '../lib/links';
+import { postText } from '../lib/trending';
 import { useApp } from '../store/AppContext';
 import type { CategoryId, SourceId } from '../types';
 
 export function CollectView() {
-  const { state, dispatch, collectFilters: f, setCollectFilters, resetCollectFilters, openModal, setView } = useApp();
+  const { state, ps, me, dispatch, gate, collectFilters: f, setCollectFilters, resetCollectFilters, openModal, setView } =
+    useApp();
   const searchId = useId();
   const prefs = state.linkPrefs;
   const items = filterLinks(state.links, prefs, f);
   const { mixed, separate } = partitionForDisplay(items);
   const manualCount = state.links.filter((l) => l.kind === 'manual').length;
   const exampleCount = state.links.filter((l) => l.kind === 'example').length;
-  const active = f.query.trim() !== '' || f.source !== 'all' || f.topic !== 'all';
+  const kw = f.keyword ? KEYWORD_BY_ID[f.keyword] : undefined;
+  const q = f.query.trim();
+  const active = q !== '' || f.source !== 'all' || f.topic !== 'all' || !!kw;
+  // 주제나 검색어가 있으면 같은 이야기를 하는 RECESS 학생 글도 한 화면에 모은다(자체 글이라 본문까지 보여줄 수 있다).
+  const relatedPosts =
+    kw || q
+      ? state.posts
+          .filter(
+            (p) => isPostVisible(p, ps, me?.id ?? null) && (kw ? matchesKeyword(postText(p), kw) : matchesQuery(p, q)),
+          )
+          .sort((a, b) => b.createdAt - a.createdAt)
+      : [];
+  const recordSearch = () => dispatch({ type: 'recordSearch', query: f.query });
   const visibleCount = (src: SourceId) => visibleLinks(state.links, prefs).filter((l) => l.source === src).length;
   const selectedExcluded = f.source !== 'all' && prefs.excludedSources.includes(f.source);
 
@@ -58,9 +76,13 @@ export function CollectView() {
             id={searchId}
             type="search"
             className="search-input"
-            placeholder="제목이나 소개로 검색"
+            placeholder="제목·소개로 검색 (예: 10모)"
             value={f.query}
-            onChange={(e) => setCollectFilters({ query: e.target.value })}
+            onChange={(e) => setCollectFilters({ query: e.target.value, keyword: null })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') recordSearch();
+            }}
+            onBlur={recordSearch}
             autoComplete="off"
           />
           {f.query && (
@@ -74,6 +96,8 @@ export function CollectView() {
             </button>
           )}
         </div>
+
+        <TrendingStrip />
 
         <div className="chip-row" role="group" aria-label="출처">
           <span className="chip-row-label" aria-hidden>
@@ -132,6 +156,23 @@ export function CollectView() {
           </div>
         )}
       </div>
+
+      {kw && (
+        <section className="topic-hub" aria-labelledby="topic-hub-title">
+          <div className="topic-hub-text">
+            <div className="topic-hub-eyebrow">인기 주제</div>
+            <h2 id="topic-hub-title" className="topic-hub-title">
+              ‘{kw.label}’ 한곳에 모아 보기
+            </h2>
+            <p className="topic-hub-sub">
+              모아보기 카드 {items.length}개 · RECESS 학생 글 {relatedPosts.length}개
+            </p>
+          </div>
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => setCollectFilters({ keyword: null })}>
+            주제 해제
+          </button>
+        </section>
+      )}
 
       <div className="result-bar" aria-live="polite">
         <span>
@@ -192,8 +233,36 @@ export function CollectView() {
               </div>
             </section>
           ))}
-          <p className="feed-end">예시 콘텐츠는 실제 커뮤니티 글이 아니에요. 실제 링크는 직접 등록한 것만 원문으로 연결돼요.</p>
         </>
+      )}
+
+      {(kw || q) && (
+        <section className="related-posts" aria-labelledby="related-title">
+          <div className="section-head">
+            <h2 id="related-title" className="section-title">
+              RECESS 학생 이야기 <span className="tab-count">{relatedPosts.length}</span>
+            </h2>
+            <button type="button" className="btn btn-soft btn-sm" onClick={() => gate(() => openModal({ type: 'compose' }))}>
+              이 주제로 글쓰기
+            </button>
+          </div>
+          {relatedPosts.length === 0 ? (
+            <p className="row-empty">아직 RECESS에 관련 글이 없어요. 첫 이야기를 남겨 보세요.</p>
+          ) : (
+            <div className="feed">
+              {relatedPosts.map((p) => (
+                <PostCard key={p.id} post={p} query={q} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {items.length > 0 && (
+        <p className="feed-end">
+          예시 콘텐츠는 실제 커뮤니티 글이 아니에요. 실제 링크는 원문 보호를 위해 본문 대신 직접 쓴 소개만 보여주고, 누르면 원문으로
+          연결돼요.
+        </p>
       )}
     </div>
   );

@@ -528,7 +528,159 @@ a.text-btn:hover {
   line-height: 1.5;
 }
 
+/* 실제 링크 제목은 원문으로 바로 가는 링크 */
+.title-link {
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 4px;
+}
+.title-link:hover {
+  color: var(--primary-text);
+}
+.title-ext {
+  display: inline;
+  margin-left: 4px;
+  vertical-align: -1px;
+  color: var(--text-3);
+}
+/* 본문 일부(예시 카드 또는 출처가 허용한 경우) */
+.link-excerpt {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--border-strong);
+  border-radius: 0 8px 8px 0;
+  background: var(--bg);
+}
+.link-excerpt p {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.excerpt-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.summary-label {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 16px;
+  color: var(--text-3);
+  vertical-align: 1px;
+}
+button.stat {
+  border: 0;
+  font: inherit;
+  cursor: pointer;
+}
+button.stat-recess:hover {
+  text-decoration: underline;
+}
+/* 인기 주제 */
+.trend-strip {
+  display: none;
+}
+.trend-rank {
+  font-weight: 700;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.trend-rank.is-top {
+  color: var(--primary-text);
+}
+.chip.is-active .trend-rank {
+  color: var(--bg);
+}
+.trend-list {
+  display: flex;
+  flex-direction: column;
+}
+.trend-item {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  text-align: left;
+  font-size: 14px;
+}
+.trend-item:hover {
+  background: var(--surface-2);
+}
+.trend-item.is-active {
+  background: var(--primary-soft);
+  color: var(--primary-text);
+  font-weight: 700;
+}
+.trend-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.trend-count {
+  font-size: 12px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+.topic-hub {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--primary-soft);
+}
+.topic-hub-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.topic-hub-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary-text);
+}
+.topic-hub-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  text-wrap: balance;
+}
+.topic-hub-sub {
+  font-size: 13px;
+  color: var(--text-2);
+}
+.related-posts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+@media (max-width: 1199px) {
+  .trend-strip {
+    display: block;
+  }
+}
+
 @media (max-width: 600px) {
+  .topic-hub {
+    flex-wrap: wrap;
+  }
   .link-card {
     padding: 12px 14px 6px;
   }

@@ -3,7 +3,7 @@ import { DEMO_OWNED_BADGES } from '../data/catalog';
 import { createCuratedLinks } from '../data/curatedLinks';
 import { createSeedLinks } from '../data/linkSeed';
 import { normalizeUrl } from '../lib/links';
-import { createSeedState, DEFAULT_LINK_PREFS } from '../data/seed';
+import { createSeedState, DEFAULT_LINK_PREFS, V4_POST_IDS } from '../data/seed';
 import type { AppState, BadgeId, CategoryId, LinkItem, LinkPrefs, LinkRef, Post, ProfileState, SourceId, ThemeChoice } from '../types';
 
 export type Action =
@@ -33,6 +33,7 @@ export type Action =
   | { type: 'excludeSource'; source: SourceId }
   | { type: 'includeSource'; source: SourceId }
   | { type: 'setShowExamples'; value: boolean }
+  | { type: 'recordSearch'; query: string }
   | { type: 'reset'; at: number };
 
 function withPrefs(state: AppState, fn: (p: LinkPrefs) => LinkPrefs): AppState {
@@ -225,6 +226,11 @@ export function reducer(state: AppState, action: Action): AppState {
       return withPrefs(state, (p) => ({ ...p, excludedSources: p.excludedSources.filter((x) => x !== action.source) }));
     case 'setShowExamples':
       return withPrefs(state, (p) => ({ ...p, showExamples: action.value }));
+    case 'recordSearch': {
+      const q = action.query.trim();
+      if (q.length < 2) return state;
+      return withPrefs(state, (p) => ({ ...p, searches: [q, ...p.searches.filter((x) => x !== q)].slice(0, 30) }));
+    }
     case 'reset':
       return createSeedState(action.at);
   }
@@ -233,7 +239,7 @@ export function reducer(state: AppState, action: Action): AppState {
 // ---------- 저장 ----------
 
 type StoredState = Omit<AppState, 'version' | 'links' | 'linkPrefs'> & {
-  version: 1 | 2 | 3;
+  version: 1 | 2 | 3 | 4;
   links?: LinkItem[];
   linkPrefs?: LinkPrefs;
 };
@@ -242,7 +248,7 @@ function isValidState(x: unknown): x is StoredState {
   if (!x || typeof x !== 'object') return false;
   const s = x as Partial<StoredState>;
   return (
-    (s.version === 1 || s.version === 2 || s.version === 3) &&
+    (s.version === 1 || s.version === 2 || s.version === 3 || s.version === 4) &&
     Array.isArray(s.users) &&
     Array.isArray(s.posts) &&
     Array.isArray(s.comments) &&
@@ -269,10 +275,32 @@ export function loadState(): AppState {
           );
           links = [...missing, ...links];
         }
+        let posts = parsed.posts;
+        let comments = parsed.comments;
+        // 4판: 예시 카드 본문 일부, 10월 모의고사 예시 카드·RECESS 글을 한 번만 더한다.
+        if (parsed.version < 4) {
+          const fresh = createSeedState(now);
+          const freshExamples = new Map(fresh.links.filter((l) => l.kind === 'example').map((l) => [l.id, l]));
+          links = links.map((l) =>
+            l.kind === 'example' && !l.excerpt && freshExamples.get(l.id)?.excerpt
+              ? { ...l, excerpt: freshExamples.get(l.id)!.excerpt }
+              : l,
+          );
+          const newExamples = [...freshExamples.values()].filter((e) => !links.some((l) => l.id === e.id));
+          links = [...links, ...newExamples];
+          const newPosts = fresh.posts.filter((p) => V4_POST_IDS.includes(p.id) && !posts.some((x) => x.id === p.id));
+          posts = [...newPosts, ...posts];
+          comments = [
+            ...comments,
+            ...fresh.comments.filter((c) => newPosts.some((p) => p.id === c.postId)),
+          ];
+        }
         return {
           ...parsed,
-          version: 3,
+          version: 4,
           theme: parsed.theme ?? 'light',
+          posts,
+          comments,
           links,
           linkPrefs: { ...DEFAULT_LINK_PREFS, ...(parsed.linkPrefs ?? {}) },
         };

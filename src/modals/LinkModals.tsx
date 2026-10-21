@@ -4,7 +4,7 @@ import { KindTag, LinkTimes, OpenOriginal, SaveLinkButton, SourceBadge, TalkButt
 import { Modal } from '../components/Modal';
 import { CATEGORIES, CATEGORY_LABEL } from '../data/catalog';
 import { SOURCE_ORDER, SOURCES } from '../data/sources';
-import { findDuplicate, guessSource, hostOf, normalizeUrl, sourceLabel } from '../lib/links';
+import { canShowExcerpt, findDuplicate, guessSource, hostOf, normalizeUrl, sourceLabel } from '../lib/links';
 import { timeAgo } from '../lib/format';
 import { useApp } from '../store/AppContext';
 import { newId } from '../store/state';
@@ -320,6 +320,15 @@ export function LinkDetailModal({ modalKey, isTop, id }: Base & { id: string }) 
           <p>{item.summary}</p>
         </div>
 
+        {canShowExcerpt(item) && (
+          <div className="detail-block">
+            <div className="detail-label">본문 일부{item.kind === 'example' ? ' (예시)' : ''}</div>
+            <blockquote className="link-excerpt">
+              <p>{item.excerpt}</p>
+            </blockquote>
+          </div>
+        )}
+
         {item.kind === 'example' && (
           <>
             <div className="detail-block">
@@ -333,6 +342,7 @@ export function LinkDetailModal({ modalKey, isTop, id }: Base & { id: string }) 
         {item.url && (
           <p className="demo-warning">
             원문은 <strong>{hostOf(item.url)}</strong>에서 확인해 주세요. RECESS는 원문 본문·이미지·댓글·작성자 정보를 저장하지 않아요.
+            {!canShowExcerpt(item) && ' 이 출처는 본문 일부 표시를 허락받지 않아 직접 쓴 소개만 보여줘요.'}
           </p>
         )}
 

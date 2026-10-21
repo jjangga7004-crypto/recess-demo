@@ -28,6 +28,8 @@ export interface LinkItem {
   updatedAt?: number;
   /** 원문 쪽 댓글 수 — 확인된 경우에만(예시 카드는 예시 값) */
   originalReplies?: number;
+  /** 본문 일부. 예시 카드이거나, 출처가 본문 일부 표시를 허용한 경우에만 보여준다. */
+  excerpt?: string;
   /** 예시 상세 화면에만 쓰는 가상 설명 */
   exampleBody?: string;
   /** 자동 수집 글은 승인 전까지 pending */
@@ -50,6 +52,8 @@ export interface LinkPrefs {
   hidden: string[];
   excludedSources: SourceId[];
   showExamples: boolean;
+  /** 이 기기에서 검색한 말(최근 것부터). 인기 주제 계산에만 쓴다. */
+  searches: string[];
 }
 
 export interface School {
@@ -117,7 +121,7 @@ export interface Report {
 }
 
 export interface AppState {
-  version: 3;
+  version: 4;
   users: User[];
   posts: Post[];
   comments: Comment[];
@@ -133,6 +137,8 @@ export interface CollectFilters {
   query: string;
   source: SourceId | 'all';
   topic: CategoryId | 'all';
+  /** 인기 주제를 눌렀을 때의 주제 id */
+  keyword: string | null;
 }
 
 export type SortId = 'latest' | 'popular';

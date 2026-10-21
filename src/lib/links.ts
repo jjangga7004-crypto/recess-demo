@@ -1,7 +1,8 @@
 import { SOURCES, SOURCE_ORDER } from '../data/sources';
+import { KEYWORD_BY_ID, matchesKeyword } from './keywords';
 import type { CollectFilters, LinkItem, LinkPrefs, LinkRef, SourceId } from '../types';
 
-export const DEFAULT_COLLECT_FILTERS: CollectFilters = { query: '', source: 'all', topic: 'all' };
+export const DEFAULT_COLLECT_FILTERS: CollectFilters = { query: '', source: 'all', topic: 'all', keyword: null };
 
 /**
  * 공개 원문 주소를 정리한다. http/https만 받고, #조각과 utm 추적값은 뺀다.
@@ -93,12 +94,19 @@ export function visibleLinks(links: LinkItem[], prefs: LinkPrefs): LinkItem[] {
 
 export function filterLinks(links: LinkItem[], prefs: LinkPrefs, f: CollectFilters): LinkItem[] {
   const q = norm(f.query);
+  const kw = f.keyword ? KEYWORD_BY_ID[f.keyword] : undefined;
   return visibleLinks(links, prefs).filter(
     (l) =>
       (f.source === 'all' || l.source === f.source) &&
       (f.topic === 'all' || l.topic === f.topic) &&
-      (!q || norm(l.title).includes(q) || norm(l.summary).includes(q)),
+      (!kw || matchesKeyword(`${l.title} ${l.summary} ${l.excerpt ?? ''}`, kw)) &&
+      (!q || norm(l.title).includes(q) || norm(l.summary).includes(q) || norm(l.excerpt ?? '').includes(q)),
   );
+}
+
+/** 출처가 허용했거나 예시 카드일 때만 본문 일부를 보여준다. */
+export function canShowExcerpt(item: LinkItem): boolean {
+  return !!item.excerpt && (item.kind === 'example' || SOURCES[item.source].excerpt === '허용');
 }
 
 /**

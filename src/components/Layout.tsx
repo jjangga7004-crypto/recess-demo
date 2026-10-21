@@ -8,6 +8,7 @@ import { timeAgo } from '../lib/format';
 import type { ViewId } from '../types';
 import { AcademyAdCard } from './AdCard';
 import { Avatar, SchoolLabel, Verified } from './Author';
+import { TrendingRail } from './Trending';
 import {
   IconBookmark,
   IconChat,
@@ -283,6 +284,7 @@ export function RightRail() {
     <aside className="right-rail" aria-label="보조 정보">
       {view === 'collect' ? (
         <>
+          <TrendingRail />
           <HotPosts title="RECESS에서 이야기 중인 링크" onlyLinked />
           <CollectStatus />
         </>

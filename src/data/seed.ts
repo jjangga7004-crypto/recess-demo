@@ -39,6 +39,25 @@ interface SeedPost {
 }
 
 const SEED_POSTS: SeedPost[] = [
+  // 10월 모의고사 주제 (4판에 추가)
+  {
+    id: 'p-o1', author: 'u5', category: 'study', minutesAgo: 50, likes: 27,
+    title: '10모 끝나고 국어 시간 배분 다시 짜는 중',
+    body: '10모 풀어 보니까 독서에서 시간이 생각보다 많이 새더라. 다음 모의고사 때는 문학 먼저 풀고 독서로 넘어가 보려고 하는데, 순서 바꿔 본 사람 있어?',
+    comments: [
+      ['u14', '나는 문학 먼저 했더니 마음이 편했어. 대신 독서 마지막 지문은 꼭 시간 체크!'],
+      ['u2', '순서보다 지문마다 제한 시간 정해 두는 게 더 도움 됐음'],
+    ],
+  },
+  {
+    id: 'p-o2', author: 'u12', category: 'daily', minutesAgo: 110, likes: 33,
+    title: '10모 성적표 보고 멘탈 관리 어떻게 해?',
+    body: '생각보다 등급이 안 나와서 하루 종일 기분이 별로였어. 다들 성적표 나오면 어떻게 털고 다시 공부해?',
+    comments: [
+      ['u16', '나는 그날은 그냥 쉬고 다음 날 틀린 것만 다시 봐'],
+      ['u5', '등급보다 틀린 유형을 보는 게 마음이 덜 흔들리더라'],
+    ],
+  },
   {
     id: 'p-d6', author: 'u3', category: 'daily', minutesAgo: 25, likes: 64,
     title: '급식 오늘 마라샹궈 나옴',
@@ -281,7 +300,7 @@ export function createSeedState(now: number = Date.now()): AppState {
   }
 
   return {
-    version: 3,
+    version: 4,
     users: SEED_USERS.map((x) => ({ ...x, ownedBadges: [...x.ownedBadges], shownBadges: [...x.shownBadges] })),
     posts,
     comments,
@@ -294,7 +313,10 @@ export function createSeedState(now: number = Date.now()): AppState {
   };
 }
 
-export const DEFAULT_LINK_PREFS: LinkPrefs = { saved: [], hidden: [], excludedSources: [], showExamples: true };
+export const DEFAULT_LINK_PREFS: LinkPrefs = { saved: [], hidden: [], excludedSources: [], showExamples: true, searches: [] };
+
+/** 4판에서 새로 넣은 RECESS 예시 글. 이전 판 데이터에 한 번만 더한다. */
+export const V4_POST_IDS = ['p-o1', 'p-o2'];
 
 // 피드 중간에 끼워 넣는 광고. 학원·브랜드 이름은 모두 가상이다.
 export const ADS = {

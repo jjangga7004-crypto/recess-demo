@@ -63,6 +63,7 @@ export function useLinkActions(item: LinkItem) {
   const openDetail = () => openModal({ type: 'linkDetail', id: item.id });
 
   const menuItems: MenuItem[] = [
+    { label: '자세히 보기', onSelect: openDetail },
     {
       label: '이 카드 숨기기',
       icon: <IconEyeOff size={18} />,
