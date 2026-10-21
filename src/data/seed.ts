@@ -1,4 +1,5 @@
-import type { AppState, BadgeId, CategoryId, Comment, Post, User } from '../types';
+import type { AppState, BadgeId, CategoryId, Comment, LinkPrefs, Post, User } from '../types';
+import { createSeedLinks } from './linkSeed';
 
 // 예시 학생 계정. 학교·닉네임 모두 가상이며 실존 인물과 관계없다.
 // 성적 뱃지 없이 활동하는 학생이 더 많도록 구성했다.
@@ -279,7 +280,7 @@ export function createSeedState(now: number = Date.now()): AppState {
   }
 
   return {
-    version: 1,
+    version: 2,
     users: SEED_USERS.map((x) => ({ ...x, ownedBadges: [...x.ownedBadges], shownBadges: [...x.shownBadges] })),
     posts,
     comments,
@@ -287,8 +288,12 @@ export function createSeedState(now: number = Date.now()): AppState {
     profiles: {},
     reports: [],
     theme: 'light',
+    links: createSeedLinks(now),
+    linkPrefs: { ...DEFAULT_LINK_PREFS },
   };
 }
+
+export const DEFAULT_LINK_PREFS: LinkPrefs = { saved: [], hidden: [], excludedSources: [], showExamples: true };
 
 // 피드 중간에 끼워 넣는 광고. 학원·브랜드 이름은 모두 가상이다.
 export const ADS = {

@@ -6,6 +6,7 @@ import { useApp } from '../store/AppContext';
 import type { Post } from '../types';
 import { AuthorInfo } from './Author';
 import { IconBookmark, IconComment, IconHeart } from './icons';
+import { LinkAttachment } from './LinkParts';
 import { ActionMenu } from './Menu';
 import { usePostActions } from './usePostActions';
 
@@ -65,6 +66,7 @@ export function PostCard({ post, query = '' }: { post: Post; query?: string }) {
       <p className="post-body clamp-3">
         <Highlight text={post.body} query={query} />
       </p>
+      {post.link && <LinkAttachment link={post.link} />}
 
       <footer className="post-actions">
         <button

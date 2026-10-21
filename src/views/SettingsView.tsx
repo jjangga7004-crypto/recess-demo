@@ -1,12 +1,72 @@
 import { Avatar, SchoolLabel, Verified } from '../components/Author';
+import { SourceBadge } from '../components/LinkParts';
 import { BRAND } from '../config';
+import { SOURCE_ORDER, SOURCES } from '../data/sources';
 import { useApp } from '../store/AppContext';
 import { clearAppStorage } from '../store/state';
 import { fullDate } from '../lib/format';
-import type { ThemeChoice } from '../types';
+import { hostOf, sourceLabel } from '../lib/links';
+import type { SourceId, ThemeChoice } from '../types';
+
+function SourceStatusCard({ id }: { id: SourceId }) {
+  const s = SOURCES[id];
+  const rows: [string, string][] = [
+    ['연결 방식', s.method],
+    ['자동 수집', s.autoEnabled ? '켜짐' : '꺼짐'],
+    ['확인 날짜', s.checkedAt ?? '해당 없음'],
+    ['수집 필드', s.fields],
+    ['요청 빈도', s.rate],
+    ['저장 기간', s.retention],
+    ['한 피드에 섞기', s.mix],
+    ['순서 바꾸기', s.reorder],
+    ['광고 함께 표시', s.ads],
+    ['마지막 성공', s.lastSuccessAt ? fullDate(s.lastSuccessAt) : '없음'],
+    ['오류', s.error ?? '없음'],
+  ];
+  return (
+    <details className="source-card">
+      <summary>
+        <SourceBadge source={id} />
+        <span className="source-card-method">{s.method}</span>
+        <span className={`state-pill ${s.autoEnabled ? 'is-on' : 'is-off'}`}>자동 수집 {s.autoEnabled ? '켜짐' : '꺼짐'}</span>
+      </summary>
+      <div className="source-card-body">
+        <p className="section-text">{s.basis}</p>
+        {s.manualNote && <p className="demo-warning">{s.manualNote}</p>}
+        <dl className="facts">
+          {rows.map(([k, v]) => (
+            <div key={k}>
+              <dt>{k}</dt>
+              <dd>{v}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="fine-print">{s.permBasis}</p>
+        {s.docs.length > 0 && (
+          <ul className="doc-list">
+            {s.docs.map((d) => (
+              <li key={d.url}>
+                <a href={d.url} target="_blank" rel="noopener noreferrer">
+                  {d.label} ↗
+                </a>
+                <span>{d.result}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </details>
+  );
+}
 
 export function SettingsView() {
-  const { state, me, ps, dispatch, openModal, toast, userById, resetFilters, setView } = useApp();
+  const { state, me, ps, dispatch, openModal, toast, userById, resetFilters, resetCollectFilters, setView } = useApp();
+  const manualLinks = state.links.filter((l) => l.kind === 'manual').sort((a, b) => b.addedAt - a.addedAt);
+  const exampleCount = state.links.filter((l) => l.kind === 'example').length;
+  const autoCount = state.links.filter((l) => l.kind === 'auto').length;
+  const hiddenLinks = state.linkPrefs.hidden
+    .map((id) => state.links.find((l) => l.id === id))
+    .filter((x): x is NonNullable<typeof x> => !!x);
 
   const blockedUsers = ps.blocked.map((id) => userById(id)).filter((x): x is NonNullable<typeof x> => !!x);
   const hiddenPosts = ps.hidden
@@ -19,14 +79,15 @@ export function SettingsView() {
       type: 'confirm',
       title: '데모를 처음 상태로 되돌릴까요?',
       message:
-        '이 데모에서 만든 프로필, 글, 댓글, 좋아요·저장, 뱃지 설정, 신고·차단 기록이 모두 지워지고 처음 예시 상태로 돌아가요. 다른 사이트의 데이터는 건드리지 않아요.',
+        '이 데모에서 만든 프로필, 글, 댓글, 좋아요·저장, 뱃지 설정, 신고·차단 기록, 직접 등록한 링크가 모두 지워지고 처음 예시 상태로 돌아가요. 다른 사이트의 데이터는 건드리지 않아요.',
       confirmLabel: '초기화',
       danger: true,
       onConfirm: () => {
         clearAppStorage();
         dispatch({ type: 'reset', at: Date.now() });
         resetFilters();
-        setView('home');
+        resetCollectFilters();
+        setView('collect');
         toast('처음 예시 상태로 돌아왔어요');
       },
     });
@@ -40,6 +101,149 @@ export function SettingsView() {
   return (
     <div className="view">
       <h1 className="view-title">설정</h1>
+
+      <section className="card settings-section" aria-labelledby="collect-content-title">
+        <h2 id="collect-content-title" className="section-title">
+          모아보기 콘텐츠
+        </h2>
+        <dl className="kind-stats">
+          <div>
+            <dt>
+              <span className="kind-tag kind-auto">실제 연결</span>
+            </dt>
+            <dd>{autoCount}개</dd>
+            <p>허용 근거를 확인한 출처에서 자동으로 가져온 글. 지금은 연결된 출처가 없어요.</p>
+          </div>
+          <div>
+            <dt>
+              <span className="kind-tag kind-manual">직접 등록</span>
+            </dt>
+            <dd>{manualLinks.length}개</dd>
+            <p>운영자가 확인한 공개 링크와 직접 쓴 소개. 원문으로 이동해요.</p>
+          </div>
+          <div>
+            <dt>
+              <span className="kind-tag kind-example">예시 콘텐츠</span>
+            </dt>
+            <dd>{exampleCount}개</dd>
+            <p>흐름을 보여주는 가상 카드. 원문이 없어 앱 안의 예시 상세로 열려요.</p>
+          </div>
+        </dl>
+        <div className="settings-row">
+          <span className="row-label" id="show-examples-label">
+            모아보기에 예시 콘텐츠 보이기
+          </span>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={state.linkPrefs.showExamples}
+            aria-labelledby="show-examples-label"
+            className={`switch${state.linkPrefs.showExamples ? ' is-on' : ''}`}
+            onClick={() => dispatch({ type: 'setShowExamples', value: !state.linkPrefs.showExamples })}
+          >
+            <span className="switch-knob" />
+          </button>
+        </div>
+      </section>
+
+      <section className="card settings-section" aria-labelledby="source-status-title">
+        <h2 id="source-status-title" className="section-title">
+          출처별 연결 상태
+        </h2>
+        <p className="section-text">
+          공식 API·공식 피드·명시적 허락이 있는 공개 페이지 순서로 연결을 검토하고, 허용 근거를 확인한 출처만 자동 수집을 켜요. 로그인·카페
+          가입·CAPTCHA·접근 차단은 우회하지 않아요.
+        </p>
+        <div className="source-cards">
+          {SOURCE_ORDER.map((id) => (
+            <SourceStatusCard key={id} id={id} />
+          ))}
+        </div>
+      </section>
+
+      <section className="card settings-section" aria-labelledby="manual-links-title">
+        <div className="section-head">
+          <h2 id="manual-links-title" className="section-title">
+            직접 등록한 링크
+          </h2>
+          <button type="button" className="btn btn-outline btn-sm" onClick={() => openModal({ type: 'linkForm' })}>
+            링크 등록
+          </button>
+        </div>
+        {manualLinks.length === 0 ? (
+          <p className="row-empty">아직 없어요. 공개 원문 주소와 직접 쓴 소개로 모아보기 카드를 만들 수 있어요.</p>
+        ) : (
+          <ul className="settings-list">
+            {manualLinks.map((l) => (
+              <li key={l.id} className="settings-row">
+                <div className="row-text">
+                  <div className="row-title clamp-1">{l.title}</div>
+                  <div className="row-meta muted">
+                    <SourceBadge source={l.source} name={sourceLabel(l)} />
+                    <span className="clamp-1">{l.url ? hostOf(l.url) : ''}</span>
+                  </div>
+                </div>
+                <div className="row-actions">
+                  <button type="button" className="btn btn-outline btn-sm" onClick={() => openModal({ type: 'linkForm', editId: l.id })}>
+                    수정
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-ghost btn-sm"
+                    onClick={() =>
+                      openModal({
+                        type: 'confirm',
+                        title: '이 링크를 삭제할까요?',
+                        message: '원문 삭제나 삭제 요청이 있을 때도 여기서 지워요. 이 링크를 참고한 RECESS 글은 남아요.',
+                        confirmLabel: '삭제',
+                        danger: true,
+                        onConfirm: () => {
+                          dispatch({ type: 'deleteLink', id: l.id });
+                          toast('링크를 삭제했어요');
+                        },
+                      })
+                    }
+                  >
+                    삭제
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <section className="card settings-section">
+        <h2 className="section-title">숨긴 카드 · 제외한 출처</h2>
+        {hiddenLinks.length === 0 && state.linkPrefs.excludedSources.length === 0 ? (
+          <p className="row-empty">숨기거나 제외한 것이 없어요. 모아보기 카드의 ⋯ 메뉴에서 정할 수 있어요.</p>
+        ) : (
+          <ul className="settings-list">
+            {state.linkPrefs.excludedSources.map((s) => (
+              <li key={s} className="settings-row">
+                <div className="row-main">
+                  <SourceBadge source={s} />
+                  <span className="row-meta muted">출처 전체 제외</span>
+                </div>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => dispatch({ type: 'includeSource', source: s })}>
+                  다시 포함
+                </button>
+              </li>
+            ))}
+            {hiddenLinks.map((l) => (
+              <li key={l.id} className="settings-row">
+                <div className="row-text">
+                  <div className="row-title clamp-1">{l.title}</div>
+                  <div className="row-meta muted">{sourceLabel(l)}</div>
+                </div>
+                <button type="button" className="btn btn-outline btn-sm" onClick={() => dispatch({ type: 'unhideLink', id: l.id })}>
+                  다시 보기
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section className="card settings-section">
         <h2 className="section-title">데모 프로필</h2>
@@ -204,6 +408,10 @@ export function SettingsView() {
           <strong>{BRAND.name}</strong>는 가칭이에요 · {BRAND.meaning}
         </p>
         <p>{BRAND.oneLiner}.</p>
+        <p>
+          검증하려는 가설: 학생들이 여러 사이트를 오가며 찾는 정보를 한곳에서 발견하게 하면 방문할 이유가 생기고, 이후 RECESS 자체
+          커뮤니티 참여로 이어질 수 있다. 아직 검증되지 않았어요.
+        </p>
         <p>기본 이용은 무료이고, 광고와 자체 운영 학원 수강 연결로 운영하는 모델을 시연해요.</p>
       </section>
     </div>

@@ -3,16 +3,31 @@ import { AuthorInfo } from '../components/Author';
 import { Modal } from '../components/Modal';
 import { BODY_MAX, TITLE_MAX } from '../config';
 import { CATEGORIES } from '../data/catalog';
+import { LinkAttachment } from '../components/LinkParts';
 import { DEFAULT_FILTERS } from '../lib/feed';
+import { toLinkRef } from '../lib/links';
 import { useApp } from '../store/AppContext';
 import { newId } from '../store/state';
 import type { CategoryId } from '../types';
 
-export function ComposeModal({ modalKey, isTop, editId }: { modalKey: number; isTop: boolean; editId?: string }) {
+export function ComposeModal({
+  modalKey,
+  isTop,
+  editId,
+  linkId,
+}: {
+  modalKey: number;
+  isTop: boolean;
+  editId?: string;
+  linkId?: string;
+}) {
   const { state, me, dispatch, closeModal, toast, setView, setFilters, filters, flashPost, openModal } = useApp();
   const editing = editId ? state.posts.find((p) => p.id === editId) : undefined;
+  const linkItem = linkId ? state.links.find((l) => l.id === linkId) : undefined;
+  // 외부 글을 보고 쓰는 의견 글: 원문 링크만 붙이고, 외부 본문·댓글은 옮기지 않는다.
+  const linkRef = editing?.link ?? (linkItem ? toLinkRef(linkItem) : undefined);
   const [category, setCategory] = useState<CategoryId>(
-    editing?.category ?? (filters.category !== 'all' ? filters.category : 'daily'),
+    editing?.category ?? linkItem?.topic ?? (filters.category !== 'all' ? filters.category : 'daily'),
   );
   const [title, setTitle] = useState(editing?.title ?? '');
   const [body, setBody] = useState(editing?.body ?? '');
@@ -45,11 +60,11 @@ export function ComposeModal({ modalKey, isTop, editId }: { modalKey: number; is
     }
 
     const id = newId('p');
-    dispatch({ type: 'createPost', id, category, title: t, body: b, at: Date.now() });
+    dispatch({ type: 'createPost', id, category, title: t, body: b, at: Date.now(), link: linkRef });
     close();
-    // 방금 쓴 글이 바로 보이도록 홈의 최신순 전체 피드로 이동하고 잠깐 강조한다.
+    // 방금 쓴 글이 바로 보이도록 RECESS의 최신순 전체 피드로 이동하고 잠깐 강조한다.
     setFilters({ ...DEFAULT_FILTERS });
-    setView('home');
+    setView('community');
     flashPost(id);
     toast('글을 올렸어요', { label: '열어 보기', run: () => openModal({ type: 'post', id }) });
   };
@@ -58,7 +73,7 @@ export function ComposeModal({ modalKey, isTop, editId }: { modalKey: number; is
 
   return (
     <Modal
-      title={editing ? '글 수정' : '글쓰기'}
+      title={editing ? '글 수정' : linkRef ? 'RECESS에서 이야기하기' : '글쓰기'}
       onClose={close}
       isTop={isTop}
       size="lg"
@@ -82,6 +97,16 @@ export function ComposeModal({ modalKey, isTop, editId }: { modalKey: number; is
           submit();
         }}
       >
+        {linkRef && (
+          <div className="field">
+            <span className="field-label">함께 붙는 링크</span>
+            <LinkAttachment link={linkRef} />
+            {!editing && (
+              <p className="field-help">원문 링크만 붙어요. 외부 글의 본문이나 댓글은 옮기지 않으니, 내 생각을 직접 적어 주세요.</p>
+            )}
+          </div>
+        )}
+
         <fieldset className="field">
           <legend className="field-label">카테고리</legend>
           <div className="chip-radio">
@@ -119,7 +144,7 @@ export function ComposeModal({ modalKey, isTop, editId }: { modalKey: number; is
               setTitle(e.target.value);
               if (errors.title) setErrors((x) => ({ ...x, title: undefined }));
             }}
-            placeholder="예: 수학 오답노트 다들 어떻게 정리함?"
+            placeholder={linkRef ? '예: 이 방법 직접 해 본 사람 있어?' : '예: 수학 오답노트 다들 어떻게 정리함?'}
             aria-invalid={!!errors.title}
             aria-describedby={errors.title ? `${titleId}-err` : undefined}
             data-autofocus
@@ -151,7 +176,9 @@ export function ComposeModal({ modalKey, isTop, editId }: { modalKey: number; is
               setBody(e.target.value);
               if (errors.body) setErrors((x) => ({ ...x, body: undefined }));
             }}
-            placeholder="다른 학교 학생들과 나누고 싶은 이야기를 적어 주세요."
+            placeholder={
+              linkRef ? '이 글을 보고 든 생각이나 궁금한 점을 직접 적어 주세요.' : '다른 학교 학생들과 나누고 싶은 이야기를 적어 주세요.'
+            }
             aria-invalid={!!errors.body}
             aria-describedby={`${bodyId}-help`}
           />

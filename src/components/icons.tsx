@@ -139,6 +139,41 @@ export const IconShield = (p: P) => (
   </svg>
 );
 
+export const IconCompass = (p: P) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" />
+  </svg>
+);
+
+export const IconChat = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M20 12a8 8 0 0 1-11.6 7.1L4 20l1-4.1A8 8 0 1 1 20 12Z" />
+    <path d="M9 11h6M9 14h4" />
+  </svg>
+);
+
+export const IconExternal = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M14 4h6v6" />
+    <path d="M20 4 11 13" />
+    <path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" />
+  </svg>
+);
+
+export const IconLink = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1" />
+    <path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
+  </svg>
+);
+
+export const IconPlus = (p: P) => (
+  <svg {...base(p)}>
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
 /** 학생 인증 표시: 작은 채운 원 + 체크 */
 export const VerifiedIcon = ({ size = 15 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden focusable={false} className="verified-icon">

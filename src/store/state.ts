@@ -1,13 +1,14 @@
 import { STORAGE_KEY, STORAGE_PREFIX } from '../config';
 import { DEMO_OWNED_BADGES } from '../data/catalog';
-import { createSeedState } from '../data/seed';
-import type { AppState, BadgeId, CategoryId, Post, ProfileState, ThemeChoice } from '../types';
+import { createSeedLinks } from '../data/linkSeed';
+import { createSeedState, DEFAULT_LINK_PREFS } from '../data/seed';
+import type { AppState, BadgeId, CategoryId, LinkItem, LinkPrefs, LinkRef, Post, ProfileState, SourceId, ThemeChoice } from '../types';
 
 export type Action =
   | { type: 'createProfile'; id: string; nickname: string; schoolId: string }
   | { type: 'switchProfile'; id: string | null }
   | { type: 'verifyCurrent' }
-  | { type: 'createPost'; id: string; category: CategoryId; title: string; body: string; at: number }
+  | { type: 'createPost'; id: string; category: CategoryId; title: string; body: string; at: number; link?: LinkRef }
   | { type: 'updatePost'; id: string; category: CategoryId; title: string; body: string; at: number }
   | { type: 'deletePost'; id: string }
   | { type: 'addComment'; id: string; postId: string; body: string; at: number }
@@ -21,7 +22,20 @@ export type Action =
   | { type: 'block'; userId: string }
   | { type: 'unblock'; userId: string }
   | { type: 'setTheme'; theme: ThemeChoice }
+  | { type: 'addLink'; item: LinkItem }
+  | { type: 'updateLink'; id: string; patch: Partial<Omit<LinkItem, 'id' | 'kind'>> }
+  | { type: 'deleteLink'; id: string }
+  | { type: 'toggleSaveLink'; id: string }
+  | { type: 'hideLink'; id: string }
+  | { type: 'unhideLink'; id: string }
+  | { type: 'excludeSource'; source: SourceId }
+  | { type: 'includeSource'; source: SourceId }
+  | { type: 'setShowExamples'; value: boolean }
   | { type: 'reset'; at: number };
+
+function withPrefs(state: AppState, fn: (p: LinkPrefs) => LinkPrefs): AppState {
+  return { ...state, linkPrefs: fn(state.linkPrefs) };
+}
 
 export const EMPTY_PROFILE_STATE: ProfileState = { liked: [], saved: [], blocked: [], hidden: [] };
 
@@ -77,6 +91,7 @@ export function reducer(state: AppState, action: Action): AppState {
         body: action.body,
         createdAt: action.at,
         baseLikes: 0,
+        ...(action.link ? { link: action.link } : {}),
       };
       return { ...state, posts: [post, ...state.posts] };
     }
@@ -180,6 +195,34 @@ export function reducer(state: AppState, action: Action): AppState {
       return withProfile(state, (p) => ({ ...p, blocked: p.blocked.filter((x) => x !== action.userId) }));
     case 'setTheme':
       return { ...state, theme: action.theme };
+    case 'addLink':
+      return { ...state, links: [action.item, ...state.links] };
+    case 'updateLink':
+      return {
+        ...state,
+        links: state.links.map((l) => (l.id === action.id && l.kind === 'manual' ? { ...l, ...action.patch } : l)),
+      };
+    case 'deleteLink':
+      // 원문 삭제·삭제 요청에 대응: 카드와 저장·숨김 기록을 함께 지운다.
+      return withPrefs(
+        { ...state, links: state.links.filter((l) => l.id !== action.id) },
+        (p) => ({ ...p, saved: p.saved.filter((x) => x !== action.id), hidden: p.hidden.filter((x) => x !== action.id) }),
+      );
+    case 'toggleSaveLink':
+      return withPrefs(state, (p) => ({ ...p, saved: toggle(p.saved, action.id) }));
+    case 'hideLink':
+      return withPrefs(state, (p) => ({ ...p, hidden: p.hidden.includes(action.id) ? p.hidden : [...p.hidden, action.id] }));
+    case 'unhideLink':
+      return withPrefs(state, (p) => ({ ...p, hidden: p.hidden.filter((x) => x !== action.id) }));
+    case 'excludeSource':
+      return withPrefs(state, (p) => ({
+        ...p,
+        excludedSources: p.excludedSources.includes(action.source) ? p.excludedSources : [...p.excludedSources, action.source],
+      }));
+    case 'includeSource':
+      return withPrefs(state, (p) => ({ ...p, excludedSources: p.excludedSources.filter((x) => x !== action.source) }));
+    case 'setShowExamples':
+      return withPrefs(state, (p) => ({ ...p, showExamples: action.value }));
     case 'reset':
       return createSeedState(action.at);
   }
@@ -187,11 +230,17 @@ export function reducer(state: AppState, action: Action): AppState {
 
 // ---------- 저장 ----------
 
-function isValidState(x: unknown): x is AppState {
+type StoredState = Omit<AppState, 'version' | 'links' | 'linkPrefs'> & {
+  version: 1 | 2;
+  links?: LinkItem[];
+  linkPrefs?: LinkPrefs;
+};
+
+function isValidState(x: unknown): x is StoredState {
   if (!x || typeof x !== 'object') return false;
-  const s = x as Partial<AppState>;
+  const s = x as Partial<StoredState>;
   return (
-    s.version === 1 &&
+    (s.version === 1 || s.version === 2) &&
     Array.isArray(s.users) &&
     Array.isArray(s.posts) &&
     Array.isArray(s.comments) &&
@@ -207,7 +256,14 @@ export function loadState(): AppState {
     if (raw) {
       const parsed: unknown = JSON.parse(raw);
       if (isValidState(parsed)) {
-        return { ...parsed, theme: parsed.theme ?? 'light' };
+        // 1판(모아보기 이전)에서 만든 글·프로필은 그대로 두고 모아보기 데이터만 더한다.
+        return {
+          ...parsed,
+          version: 2,
+          theme: parsed.theme ?? 'light',
+          links: Array.isArray(parsed.links) ? parsed.links : createSeedLinks(Date.now()),
+          linkPrefs: { ...DEFAULT_LINK_PREFS, ...(parsed.linkPrefs ?? {}) },
+        };
       }
     }
   } catch {

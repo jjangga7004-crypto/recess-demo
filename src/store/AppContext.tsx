@@ -11,12 +11,16 @@ import {
   type ReactNode,
 } from 'react';
 import { DEFAULT_FILTERS } from '../lib/feed';
-import type { AppState, BadgeId, FeedFilters, ProfileState, User, ViewId } from '../types';
+import { DEFAULT_COLLECT_FILTERS } from '../lib/links';
+import type { AppState, BadgeId, CollectFilters, FeedFilters, ProfileState, User, ViewId } from '../types';
 import { loadState, profileStateOf, reducer, saveState, type Action } from './state';
 
 export type ModalSpec =
   | { type: 'onboarding' }
-  | { type: 'compose'; editId?: string }
+  | { type: 'compose'; editId?: string; linkId?: string }
+  | { type: 'create' }
+  | { type: 'linkForm'; editId?: string }
+  | { type: 'linkDetail'; id: string }
   | { type: 'post'; id: string; focusComment?: boolean }
   | { type: 'report'; postId: string }
   | {
@@ -51,6 +55,9 @@ interface AppContextValue {
   filters: FeedFilters;
   setFilters: (patch: Partial<FeedFilters>) => void;
   resetFilters: () => void;
+  collectFilters: CollectFilters;
+  setCollectFilters: (patch: Partial<CollectFilters>) => void;
+  resetCollectFilters: () => void;
   modals: OpenModal[];
   openModal: (spec: ModalSpec) => void;
   closeModal: (key: number) => void;
@@ -69,8 +76,9 @@ const Ctx = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, undefined, loadState);
-  const [view, setViewRaw] = useState<ViewId>('home');
+  const [view, setViewRaw] = useState<ViewId>('collect');
   const [filters, setFiltersRaw] = useState<FeedFilters>(DEFAULT_FILTERS);
+  const [collectFilters, setCollectFiltersRaw] = useState<CollectFilters>(DEFAULT_COLLECT_FILTERS);
   const [modals, setModals] = useState<OpenModal[]>([]);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [flashId, setFlashId] = useState<string | null>(null);
@@ -103,6 +111,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const setFilters = useCallback((patch: Partial<FeedFilters>) => setFiltersRaw((f) => ({ ...f, ...patch })), []);
   const resetFilters = useCallback(() => setFiltersRaw((f) => ({ ...DEFAULT_FILTERS, sort: f.sort })), []);
+  const setCollectFilters = useCallback(
+    (patch: Partial<CollectFilters>) => setCollectFiltersRaw((f) => ({ ...f, ...patch })),
+    [],
+  );
+  const resetCollectFilters = useCallback(() => setCollectFiltersRaw(DEFAULT_COLLECT_FILTERS), []);
 
   const openModal = useCallback((spec: ModalSpec) => {
     keyRef.current += 1;
@@ -166,6 +179,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
     filters,
     setFilters,
     resetFilters,
+    collectFilters,
+    setCollectFilters,
+    resetCollectFilters,
     modals,
     openModal,
     closeModal,

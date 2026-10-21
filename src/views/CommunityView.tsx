@@ -11,7 +11,8 @@ import type { CategoryId, RegionId, SortId } from '../types';
 // 광고는 피드 n번째 글 뒤에 끼운다.
 const AD_SLOTS: Record<number, 'academy' | 'planner'> = { 4: 'academy', 12: 'planner' };
 
-export function HomeView() {
+/** RECESS 자체 커뮤니티: 학생 인증·학교 표시 기반으로 직접 쓰고 대화하는 피드 */
+export function CommunityView() {
   const { state, me, ps, filters, setFilters, resetFilters, gate, openModal } = useApp();
   const searchId = useId();
   const schoolId = useId();
@@ -40,7 +41,13 @@ export function HomeView() {
   const summary = describeFilters(filters, me ? SCHOOL_BY_ID[me.schoolId]?.name : undefined);
 
   return (
-    <div className="home">
+    <div className="view home">
+      <div className="view-head">
+        <div>
+          <h1 className="view-title">RECESS</h1>
+          <p className="view-sub">학교와 재학 여부가 확인된 학생끼리 이야기하는 곳이에요. 실명·반·번호는 보이지 않아요.</p>
+        </div>
+      </div>
       <div className="feed-controls">
         <div className="search">
           <label htmlFor={searchId} className="sr-only">

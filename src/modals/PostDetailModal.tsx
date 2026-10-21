@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { AuthorInfo } from '../components/Author';
 import { IconBookmark, IconComment, IconHeart } from '../components/icons';
+import { LinkAttachment } from '../components/LinkParts';
 import { ActionMenu } from '../components/Menu';
 import { Modal } from '../components/Modal';
 import { usePostActions } from '../components/usePostActions';
@@ -109,6 +110,7 @@ function PostDetail({
         </div>
 
         <div className="detail-body">{post.body}</div>
+        {post.link && <LinkAttachment link={post.link} />}
 
         <div className="post-actions detail-actions">
           <button

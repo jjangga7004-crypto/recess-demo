@@ -1,5 +1,6 @@
 import { useApp } from '../store/AppContext';
 import { ComposeModal } from './ComposeModal';
+import { CreateChooserModal, LinkDetailModal, LinkFormModal } from './LinkModals';
 import { OnboardingModal } from './OnboardingModal';
 import { PostDetailModal } from './PostDetailModal';
 import { AcademyModal, BadgeModal, ConfirmModal, PlannerModal, ReportModal } from './SmallModals';
@@ -16,7 +17,13 @@ export function ModalHost() {
           case 'onboarding':
             return <OnboardingModal key={m.key} {...common} />;
           case 'compose':
-            return <ComposeModal key={m.key} {...common} editId={m.editId} />;
+            return <ComposeModal key={m.key} {...common} editId={m.editId} linkId={m.linkId} />;
+          case 'create':
+            return <CreateChooserModal key={m.key} {...common} />;
+          case 'linkForm':
+            return <LinkFormModal key={m.key} {...common} editId={m.editId} />;
+          case 'linkDetail':
+            return <LinkDetailModal key={m.key} {...common} id={m.id} />;
           case 'post':
             return <PostDetailModal key={m.key} {...common} postId={m.id} focusComment={m.focusComment} />;
           case 'report':
