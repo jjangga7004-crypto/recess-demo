@@ -261,7 +261,7 @@ export function CollectView() {
       {items.length > 0 && (
         <p className="feed-end">
           {prefs.showExamples && '예시 콘텐츠는 실제 커뮤니티 글이 아니에요. '}
-          실제 링크는 원문 보호를 위해 본문 대신 직접 쓴 소개만 보여주고, 누르면 원문으로 연결돼요.
+          실제 링크는 누르면 원문으로 연결돼요.
         </p>
       )}
     </div>

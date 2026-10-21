@@ -375,7 +375,7 @@ export function LinkDetailModal({ modalKey, isTop, id }: Base & { id: string }) 
         {item.url && (
           <p className="demo-warning">
             원문은 <strong>{hostOf(item.url)}</strong>에서 확인해 주세요. RECESS는 원문 본문·이미지·댓글·작성자 정보를 저장하지 않아요.
-            {!canShowExcerpt(item) && ' 이 출처는 본문 일부 표시를 허락받지 않아 직접 쓴 소개만 보여줘요.'}
+            {SOURCES[item.source].excerpt !== '허용' && ' 이 출처는 본문 일부를 보여주지 않아 직접 쓴 소개만 보여줘요.'}
           </p>
         )}
 
